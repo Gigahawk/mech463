@@ -1,0 +1,181 @@
+#+TITLE: MECH 463 Prelab 1 Exercise
+#+AUTHOR: Jasper Chan 37467164
+#+OPTIONS: toc:nil
+
+#+BEGIN_SRC ipython :session :exports none :results silent
+%matplotlib inline
+%config InlineBackend.figure_format = 'svg'
+import numpy as np
+import matplotlib.pyplot as plt
+#+END_SRC
+
+
+* 
+Draw the free-body diagram of the apparatus for in-phase action of the rotating masses.
+For clarity, use a 3-D view.
+
+[[file:./q1.svg]]
+
+* 
+Using the physical data below, predict the expected natural frequency of the vibration.
+
+The total mass of the system can be calculated by:
+#+BEGIN_SRC ipython :session :exports both :results raw drawer
+
+# All masses in kilograms
+m_box_b = 15 
+m_box_acd = 15.67
+m_accel = 0.1
+m_eccen = 0.0152
+
+m_b = m_box_b + m_accel + 2*m_eccen
+m_acd = m_box_acd + m_accel + 2*m_eccen
+f"m_b = {m_b} kg, m_acd = {m_acd} kg"
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out[2]:
+: 'm_b = 15.1304 kg, m_acd = 15.8004 kg'
+:END:
+
+The equivalent spring constant of the system can be calculated by:
+
+#+BEGIN_SRC ipython :session :exports both :results raw drawer
+
+# All masses in kilograms
+k_s = 14400 # N/m
+
+k = 4*k_s
+f"{k} N/m"
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out[3]:
+: '57600 N/m'
+:END:
+
+The natural frequency can then be calculated:
+#+BEGIN_SRC ipython :session :exports both :results raw drawer
+
+omega_b = np.sqrt(k/m_b)
+omega_acd = np.sqrt(k/m_acd)
+
+f_n_b = omega_b/(2*np.pi) # Hz
+f_n_acd = omega_acd/(2*np.pi) # Hz
+
+f"f_n_b = {f_n_b:.3f} Hz, f_n_acd = {f_n_acd:.3f} Hz"
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out[4]:
+: 'f_n_b = 9.820 Hz, f_n_acd = 9.609 Hz'
+:END:
+
+* 
+For $\zeta = 0.0, 0.1, 0.2$, compute and plot the expected vibration amplitude vs frequency responses and the phase lead vs. frequency responses.
+
+#+BEGIN_SRC ipython :session :exports code
+f_range = np.linspace(4, 20, 1000) # Hz
+zeta = (0.0, 0.1, 0.2)
+#+END_SRC
+
+#+RESULTS:
+: # Out[5]:
+
+** Vibration Amplitude vs. Frequency
+#+BEGIN_SRC ipython :session :exports code :results silent
+eccentricity = 0.038 # m
+def vib_amplitude(freq, freq_n, damping):
+    r = freq/freq_n
+    v = 2*np.pi*eccentricity*freq
+    force = 2*m_eccen * v**2/eccentricity
+    amplitude = (force/k) * 1/np.sqrt((1 - r**2)**2 + (2*damping*r)**2)
+    return amplitude
+
+def phase_lead(freq, freq_n, damping):
+    r = freq/freq_n
+    lead = np.arctan(np.divide((-2*damping*r), (1 - r**2)))
+    return lead
+#+END_SRC
+
+*** Setup B
+#+BEGIN_SRC ipython :session :exports results :results raw drawer
+for z in zeta:
+    response = vib_amplitude(f_range, f_n_b, z)
+    plt.plot(f_range, 1000*response, label=f"$\zeta = {z}$")
+plt.legend()
+plt.title("Vibration Amplitude vs Frequency (Setup B)")
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Vibration Amplitude (mm)")
+# Limit y axis (response amplitude with no damping at f = f_n is infinity)
+plt.ylim(0, 0.5)
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out[22]:
+[[file:./obipy-resources/N4pVlW.svg]]
+:END:
+#+BEGIN_SRC ipython :session :exports results :results raw drawer
+for z in zeta:
+    response = phase_lead(f_range, f_n_b, z)
+    plt.plot(f_range, response, label=f"$\zeta = {z}$")
+plt.legend()
+plt.title("Phase Lead vs Frequency (Setup B)")
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Phase Lead (rad)")
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out[33]:
+[[file:./obipy-resources/8VbyZ0.svg]]
+:END:
+
+*** Setup A-C-D
+#+BEGIN_SRC ipython :session :exports results :results raw drawer
+for z in zeta:
+    response = vib_amplitude(f_range, f_n_acd, z)
+    plt.plot(f_range, 1000*response, label=f"$\zeta = {z}$")
+plt.legend()
+plt.title("Vibration Amplitude vs Frequency (Setup A-C-D)")
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Vibration Amplitude (mm)")
+# Limit y axis (response amplitude with no damping at f = f_n is infinity)
+plt.ylim(0, 0.5)
+plt.show()
+
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out[25]:
+[[file:./obipy-resources/K0Iaac.svg]]
+:END:
+
+#+BEGIN_SRC ipython :session :exports results :results raw drawer
+for z in zeta:
+    response = phase_lead(f_range, f_n_acd, z)
+    plt.plot(f_range, response, label=f"$\zeta = {z}$")
+plt.legend()
+plt.title("Phase Lead vs Frequency (Setup A-C-D)")
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Phase Lead (rad)")
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+# Out[34]:
+[[file:./obipy-resources/m0VnKw.svg]]
+:END:
+
+* 
+Derive the relation between the phase lead of acceleration and phase lead of displacement
+
+Because acceleration is the second time derivative of displacement, for an object in sinusoidal motion, the acceleration will lead by \SI{180}{\degree}.
