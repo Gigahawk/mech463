@@ -98,6 +98,8 @@ def vib_amplitude(freq, freq_n, damping):
 def phase_lead(freq, freq_n, damping):
     r = freq/freq_n
     lead = np.arctan(np.divide((-2*damping*r), (1 - r**2)))
+    # phase angle isn't supposed to be negative according to wikipedia
+    lead += np.pi*np.greater(1, r).astype(int)
     return lead
 #+END_SRC
 
